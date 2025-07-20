@@ -1,0 +1,994 @@
+openapi: 3.0.0
+info:
+  title: Investment Comparison Platform API
+  description: RESTful API for comparing investment opportunities across different financial markets
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@investmentplatform.com
+
+servers:
+  - url: https://api.investmentplatform.com/v1
+    description: Production server
+  - url: https://staging-api.investmentplatform.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Markets
+    description: Market data operations
+  - name: Portfolio
+    description: Portfolio management
+  - name: Analytics
+    description: Financial analytics and calculations
+  - name: Alerts
+    description: Price alerts and notifications
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - firstName
+                - lastName
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                phoneNumber:
+                  type: string
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        409:
+          description: User already exists
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        200:
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /markets/stocks:
+    get:
+      tags:
+        - Markets
+      summary: Get stock market data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: symbols
+          in: query
+          description: Comma-separated list of stock symbols
+          required: false
+          schema:
+            type: string
+            example: "AAPL,GOOGL,MSFT"
+        - name: exchange
+          in: query
+          description: Stock exchange
+          required: false
+          schema:
+            type: string
+            enum: [NYSE, NASDAQ, LSE, GPW]
+        - name: sector
+          in: query
+          description: Industry sector
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: Stock data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockData'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /markets/stocks/{symbol}:
+    get:
+      tags:
+        - Markets
+      summary: Get detailed stock information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "AAPL"
+      responses:
+        200:
+          description: Stock details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockDetail'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  /markets/crypto:
+    get:
+      tags:
+        - Markets
+      summary: Get cryptocurrency market data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: symbols
+          in: query
+          description: Comma-separated list of crypto symbols
+          schema:
+            type: string
+            example: "BTC,ETH,BNB"
+        - name: convert
+          in: query
+          description: Target currency for conversion
+          schema:
+            type: string
+            default: "USD"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [marketCap, volume24h, priceChange24h]
+            default: marketCap
+      responses:
+        200:
+          description: Cryptocurrency data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CryptoData'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /markets/commodities:
+    get:
+      tags:
+        - Markets
+      summary: Get commodity market data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          description: Commodity category
+          schema:
+            type: string
+            enum: [metals, energy, agriculture]
+        - name: symbols
+          in: query
+          schema:
+            type: string
+            example: "GOLD,SILVER,WTI"
+      responses:
+        200:
+          description: Commodity data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommodityData'
+
+  /markets/real-estate:
+    get:
+      tags:
+        - Markets
+      summary: Get real estate market data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: location
+          in: query
+          description: Location (city, region, country)
+          required: true
+          schema:
+            type: string
+        - name: propertyType
+          in: query
+          schema:
+            type: string
+            enum: [residential, commercial, industrial]
+        - name: priceRange
+          in: query
+          schema:
+            type: string
+            example: "100000-500000"
+      responses:
+        200:
+          description: Real estate data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RealEstateData'
+
+  /markets/compare:
+    post:
+      tags:
+        - Markets
+      summary: Compare investments across different markets
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - investments
+                - metrics
+                - period
+              properties:
+                investments:
+                  type: array
+                  minItems: 2
+                  items:
+                    type: object
+                    properties:
+                      market:
+                        type: string
+                        enum: [stocks, crypto, commodities, realEstate]
+                      symbol:
+                        type: string
+                      amount:
+                        type: number
+                metrics:
+                  type: array
+                  items:
+                    type: string
+                    enum: [roi, volatility, sharpeRatio, correlation]
+                period:
+                  type: string
+                  enum: [1D, 1W, 1M, 3M, 6M, 1Y, 5Y]
+      responses:
+        200:
+          description: Comparison results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComparisonResult'
+
+  /portfolio:
+    get:
+      tags:
+        - Portfolio
+      summary: Get user's portfolio
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Portfolio retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+
+    post:
+      tags:
+        - Portfolio
+      summary: Create new portfolio
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                isPublic:
+                  type: boolean
+                  default: false
+      responses:
+        201:
+          description: Portfolio created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+
+  /portfolio/{portfolioId}/positions:
+    post:
+      tags:
+        - Portfolio
+      summary: Add position to portfolio
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: portfolioId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - market
+                - symbol
+                - quantity
+                - purchasePrice
+                - purchaseDate
+              properties:
+                market:
+                  type: string
+                  enum: [stocks, crypto, commodities, realEstate]
+                symbol:
+                  type: string
+                quantity:
+                  type: number
+                purchasePrice:
+                  type: number
+                purchaseDate:
+                  type: string
+                  format: date
+      responses:
+        201:
+          description: Position added
+
+  /analytics/calculate:
+    post:
+      tags:
+        - Analytics
+      summary: Calculate financial metrics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+                - metrics
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        format: date
+                      value:
+                        type: number
+                metrics:
+                  type: array
+                  items:
+                    type: string
+                    enum: [
+                      returns,
+                      volatility,
+                      sharpeRatio,
+                      maxDrawdown,
+                      beta,
+                      alpha,
+                      correlation
+                    ]
+      responses:
+        200:
+          description: Calculations completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResult'
+
+  /analytics/optimize-portfolio:
+    post:
+      tags:
+        - Analytics
+      summary: Optimize portfolio allocation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - assets
+                - constraints
+              properties:
+                assets:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      market:
+                        type: string
+                      symbol:
+                        type: string
+                constraints:
+                  type: object
+                  properties:
+                    minWeight:
+                      type: number
+                      default: 0
+                    maxWeight:
+                      type: number
+                      default: 1
+                    targetReturn:
+                      type: number
+                    maxRisk:
+                      type: number
+                optimizationMethod:
+                  type: string
+                  enum: [meanVariance, blackLitterman, riskParity]
+                  default: meanVariance
+      responses:
+        200:
+          description: Optimization results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimizationResult'
+
+  /alerts:
+    get:
+      tags:
+        - Alerts
+      summary: Get user's alerts
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Alerts retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+
+    post:
+      tags:
+        - Alerts
+      summary: Create price alert
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - market
+                - symbol
+                - condition
+                - value
+              properties:
+                market:
+                  type: string
+                  enum: [stocks, crypto, commodities]
+                symbol:
+                  type: string
+                condition:
+                  type: string
+                  enum: [above, below, change_percent]
+                value:
+                  type: number
+                notificationChannels:
+                  type: array
+                  items:
+                    type: string
+                    enum: [email, push, sms]
+      responses:
+        201:
+          description: Alert created
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    StockData:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        exchange:
+          type: string
+        price:
+          type: number
+        change:
+          type: number
+        changePercent:
+          type: number
+        volume:
+          type: integer
+        marketCap:
+          type: number
+        pe:
+          type: number
+        dividendYield:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+
+    StockDetail:
+      allOf:
+        - $ref: '#/components/schemas/StockData'
+        - type: object
+          properties:
+            description:
+              type: string
+            sector:
+              type: string
+            industry:
+              type: string
+            employees:
+              type: integer
+            headquarters:
+              type: string
+            financials:
+              type: object
+              properties:
+                revenue:
+                  type: number
+                earnings:
+                  type: number
+                assets:
+                  type: number
+                debt:
+                  type: number
+            technicalIndicators:
+              type: object
+              properties:
+                rsi:
+                  type: number
+                macd:
+                  type: object
+                movingAverages:
+                  type: object
+
+    CryptoData:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        marketCap:
+          type: number
+        volume24h:
+          type: number
+        change24h:
+          type: number
+        change7d:
+          type: number
+        circulatingSupply:
+          type: number
+        totalSupply:
+          type: number
+        maxSupply:
+          type: number
+        ath:
+          type: number
+        athDate:
+          type: string
+          format: date-time
+
+    CommodityData:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+        unit:
+          type: string
+        change:
+          type: number
+        changePercent:
+          type: number
+        contract:
+          type: object
+          properties:
+            month:
+              type: string
+            year:
+              type: integer
+            expirationDate:
+              type: string
+              format: date
+
+    RealEstateData:
+      type: object
+      properties:
+        id:
+          type: string
+        propertyType:
+          type: string
+        location:
+          type: object
+          properties:
+            address:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            country:
+              type: string
+            latitude:
+              type: number
+            longitude:
+              type: number
+        price:
+          type: number
+        size:
+          type: number
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        yearBuilt:
+          type: integer
+        estimatedRent:
+          type: number
+        capRate:
+          type: number
+
+    Portfolio:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        totalValue:
+          type: number
+        totalCost:
+          type: number
+        totalReturn:
+          type: number
+        totalReturnPercent:
+          type: number
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+
+    Position:
+      type: object
+      properties:
+        id:
+          type: string
+        market:
+          type: string
+        symbol:
+          type: string
+        quantity:
+          type: number
+        purchasePrice:
+          type: number
+        currentPrice:
+          type: number
+        value:
+          type: number
+        profitLoss:
+          type: number
+        profitLossPercent:
+          type: number
+
+    ComparisonResult:
+      type: object
+      properties:
+        period:
+          type: string
+        investments:
+          type: array
+          items:
+            type: object
+            properties:
+              market:
+                type: string
+              symbol:
+                type: string
+              metrics:
+                type: object
+                additionalProperties:
+                  type: number
+        summary:
+          type: object
+          properties:
+            bestPerformer:
+              type: object
+            worstPerformer:
+              type: object
+            recommendations:
+              type: array
+              items:
+                type: string
+
+    AnalyticsResult:
+      type: object
+      properties:
+        metrics:
+          type: object
+          additionalProperties:
+            type: number
+        charts:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              data:
+                type: array
+
+    OptimizationResult:
+      type: object
+      properties:
+        optimalWeights:
+          type: object
+          additionalProperties:
+            type: number
+        expectedReturn:
+          type: number
+        expectedRisk:
+          type: number
+        sharpeRatio:
+          type: number
+        efficientFrontier:
+          type: array
+          items:
+            type: object
+            properties:
+              risk:
+                type: number
+              return:
+                type: number
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        market:
+          type: string
+        symbol:
+          type: string
+        condition:
+          type: string
+        value:
+          type: number
+        currentValue:
+          type: number
+        active:
+          type: boolean
+        triggered:
+          type: boolean
+        triggeredAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

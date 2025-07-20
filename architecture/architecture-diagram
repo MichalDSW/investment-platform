@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architektura Systemu - Platforma Inwestycyjna</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #ffffff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 40px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .architecture-diagram {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 40px;
+            position: relative;
+            min-height: 900px;
+        }
+        
+        /* Layers */
+        .layer {
+            position: absolute;
+            width: calc(100% - 80px);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .layer-title {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+        
+        /* Components */
+        .component {
+            position: absolute;
+            background: white;
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            min-width: 160px;
+        }
+        
+        .component-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #212529;
+        }
+        
+        .component-desc {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        /* Component Colors */
+        .frontend {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+        
+        .backend {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .database {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .external {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .infrastructure {
+            border-color: #8b5cf6;
+            background: #faf5ff;
+        }
+        
+        /* Connections */
+        .connection {
+            position: absolute;
+            width: 2px;
+            background: #cbd5e1;
+            transform-origin: top left;
+        }
+        
+        .connection::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: -4px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 8px solid #cbd5e1;
+        }
+        
+        /* Legend */
+        .legend {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-box {
+            width: 24px;
+            height: 24px;
+            border: 2px solid;
+            border-radius: 4px;
+        }
+        
+        .legend-text {
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        /* Tech Stack */
+        .tech-stack {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .tech-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 24px;
+        }
+        
+        .tech-card h3 {
+            color: #212529;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .tech-card ul {
+            list-style: none;
+        }
+        
+        .tech-card li {
+            color: #495057;
+            font-size: 14px;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .tech-card li:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #6c757d;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+            .architecture-diagram {
+                border: 1px solid #000;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Architektura Aplikacji Chmurowej do Porównywania Inwestycji</h1>
+        
+        <div class="architecture-diagram">
+            <!-- Layer 1: Presentation -->
+            <div class="layer" style="top: 20px; height: 140px;">
+                <div class="layer-title">Warstwa Prezentacji</div>
+            </div>
+            
+            <!-- Layer 2: Application -->
+            <div class="layer" style="top: 180px; height: 220px;">
+                <div class="layer-title">Warstwa Aplikacji</div>
+            </div>
+            
+            <!-- Layer 3: Data -->
+            <div class="layer" style="top: 420px; height: 140px;">
+                <div class="layer-title">Warstwa Danych</div>
+            </div>
+            
+            <!-- Layer 4: External -->
+            <div class="layer" style="top: 580px; height: 140px;">
+                <div class="layer-title">Integracje Zewnętrzne</div>
+            </div>
+            
+            <!-- Layer 5: Infrastructure -->
+            <div class="layer" style="top: 740px; height: 140px;">
+                <div class="layer-title">Infrastruktura Chmurowa</div>
+            </div>
+            
+            <!-- Frontend Components -->
+            <div class="component frontend" style="left: 60px; top: 60px;">
+                <div class="component-title">Web Application</div>
+                <div class="component-desc">React.js<br>Redux, Material-UI</div>
+            </div>
+            
+            <div class="component frontend" style="left: 280px; top: 60px;">
+                <div class="component-title">Mobile App</div>
+                <div class="component-desc">React Native<br>iOS/Android</div>
+            </div>
+            
+            <div class="component frontend" style="left: 500px; top: 60px;">
+                <div class="component-title">Admin Panel</div>
+                <div class="component-desc">Next.js<br>SSR, Auth</div>
+            </div>
+            
+            <div class="component frontend" style="left: 720px; top: 60px;">
+                <div class="component-title">Analytics Dashboard</div>
+                <div class="component-desc">Chart.js, D3.js<br>Real-time charts</div>
+            </div>
+            
+            <!-- Backend Services -->
+            <div class="component backend" style="left: 60px; top: 220px;">
+                <div class="component-title">API Gateway</div>
+                <div class="component-desc">Kong<br>Routing, Auth</div>
+            </div>
+            
+            <div class="component backend" style="left: 280px; top: 220px;">
+                <div class="component-title">Auth Service</div>
+                <div class="component-desc">Node.js<br>JWT, OAuth2</div>
+            </div>
+            
+            <div class="component backend" style="left: 500px; top: 220px;">
+                <div class="component-title">Market Data Service</div>
+                <div class="component-desc">Node.js<br>Data aggregation</div>
+            </div>
+            
+            <div class="component backend" style="left: 720px; top: 220px;">
+                <div class="component-title">Analytics Service</div>
+                <div class="component-desc">Python<br>ML, Statistics</div>
+            </div>
+            
+            <div class="component backend" style="left: 170px; top: 320px;">
+                <div class="component-title">Portfolio Service</div>
+                <div class="component-desc">Node.js<br>User portfolios</div>
+            </div>
+            
+            <div class="component backend" style="left: 390px; top: 320px;">
+                <div class="component-title">Notification Service</div>
+                <div class="component-desc">Node.js<br>Email, Push, SMS</div>
+            </div>
+            
+            <div class="component backend" style="left: 610px; top: 320px;">
+                <div class="component-title">Report Service</div>
+                <div class="component-desc">Python<br>PDF generation</div>
+            </div>
+            
+            <!-- Databases -->
+            <div class="component database" style="left: 60px; top: 460px;">
+                <div class="component-title">PostgreSQL</div>
+                <div class="component-desc">Users, Portfolios<br>Transactions</div>
+            </div>
+            
+            <div class="component database" style="left: 280px; top: 460px;">
+                <div class="component-title">MongoDB</div>
+                <div class="component-desc">Market data<br>Time series</div>
+            </div>
+            
+            <div class="component database" style="left: 500px; top: 460px;">
+                <div class="component-title">Redis</div>
+                <div class="component-desc">Cache<br>Sessions</div>
+            </div>
+            
+            <div class="component database" style="left: 720px; top: 460px;">
+                <div class="component-title">InfluxDB</div>
+                <div class="component-desc">Metrics<br>Performance</div>
+            </div>
+            
+            <!-- External APIs -->
+            <div class="component external" style="left: 60px; top: 620px;">
+                <div class="component-title">Stock Market APIs</div>
+                <div class="component-desc">Alpha Vantage<br>Yahoo Finance</div>
+            </div>
+            
+            <div class="component external" style="left: 280px; top: 620px;">
+                <div class="component-title">Crypto APIs</div>
+                <div class="component-desc">Binance<br>CoinGecko</div>
+            </div>
+            
+            <div class="component external" style="left: 500px; top: 620px;">
+                <div class="component-title">Commodity APIs</div>
+                <div class="component-desc">Quandl<br>Trading Economics</div>
+            </div>
+            
+            <div class="component external" style="left: 720px; top: 620px;">
+                <div class="component-title">Real Estate APIs</div>
+                <div class="component-desc">Zillow<br>Realty APIs</div>
+            </div>
+            
+            <!-- Infrastructure -->
+            <div class="component infrastructure" style="left: 60px; top: 780px;">
+                <div class="component-title">Docker</div>
+                <div class="component-desc">Containerization<br>Docker Compose</div>
+            </div>
+            
+            <div class="component infrastructure" style="left: 280px; top: 780px;">
+                <div class="component-title">Kubernetes</div>
+                <div class="component-desc">Orchestration<br>Auto-scaling</div>
+            </div>
+            
+            <div class="component infrastructure" style="left: 500px; top: 780px;">
+                <div class="component-title">AWS</div>
+                <div class="component-desc">Cloud Platform<br>Managed Services</div>
+            </div>
+            
+            <div class="component infrastructure" style="left: 720px; top: 780px;">
+                <div class="component-title">Monitoring</div>
+                <div class="component-desc">Prometheus<br>Grafana, ELK</div>
+            </div>
+            
+            <!-- Connections -->
+            <div class="connection" style="left: 140px; top: 200px; height: 20px;"></div>
+            <div class="connection" style="left: 360px; top: 200px; height: 20px;"></div>
+            <div class="connection" style="left: 580px; top: 200px; height: 20px;"></div>
+            <div class="connection" style="left: 800px; top: 200px; height: 20px;"></div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #0ea5e9; background: #f0f9ff;"></div>
+                <span class="legend-text">Frontend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #3b82f6; background: #eff6ff;"></div>
+                <span class="legend-text">Backend Services</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #f59e0b; background: #fffbeb;"></div>
+                <span class="legend-text">Databases</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #10b981; background: #f0fdf4;"></div>
+                <span class="legend-text">External APIs</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #8b5cf6; background: #faf5ff;"></div>
+                <span class="legend-text">Infrastructure</span>
+            </div>
+        </div>
+        
+        <!-- Tech Stack -->
+        <div class="tech-stack">
+            <div class="tech-card">
+                <h3>Frontend Technologies</h3>
+                <ul>
+                    <li>React.js 18 + TypeScript</li>
+                    <li>Redux Toolkit (state management)</li>
+                    <li>Material-UI / Ant Design</li>
+                    <li>Chart.js, Recharts, D3.js</li>
+                    <li>React Native (mobile)</li>
+                    <li>Next.js (SSR/SSG)</li>
+                    <li>Progressive Web App</li>
+                </ul>
+            </div>
+            
+            <div class="tech-card">
+                <h3>Backend Technologies</h3>
+                <ul>
+                    <li>Node.js + Express.js</li>
+                    <li>Python + FastAPI</li>
+                    <li>GraphQL (Apollo Server)</li>
+                    <li>WebSockets (Socket.io)</li>
+                    <li>Message Queue (RabbitMQ)</li>
+                    <li>Cron Jobs (node-cron)</li>
+                    <li>JWT Authentication</li>
+                </ul>
+            </div>
+            
+            <div class="tech-card">
+                <h3>Data & Infrastructure</h3>
+                <ul>
+                    <li>PostgreSQL (relational data)</li>
+                    <li>MongoDB (time-series data)</li>
+                    <li>Redis (caching & sessions)</li>
+                    <li>InfluxDB (metrics)</li>
+                    <li>Docker & Kubernetes</li>
+                    <li>AWS/Azure/GCP</li>
+                    <li>Nginx (reverse proxy)</li>
+                </ul>
+            </div>
+            
+            <div class="tech-card">
+                <h3>DevOps & Monitoring</h3>
+                <ul>
+                    <li>GitHub Actions (CI/CD)</li>
+                    <li>Terraform (IaC)</li>
+                    <li>Prometheus + Grafana</li>
+                    <li>ELK Stack (logging)</li>
+                    <li>SonarQube (code quality)</li>
+                    <li>Sentry (error tracking)</li>
+                    <li>New Relic (APM)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

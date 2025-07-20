@@ -1,0 +1,237 @@
+# README.md
+# Market Data Service
+
+## Overview
+This is the market data aggregation service for the Investment Comparison Platform. It fetches real-time and historical data from various financial markets including stocks, cryptocurrencies, commodities, and real estate.
+
+## Features
+- Real-time stock quotes from Alpha Vantage
+- Cryptocurrency data from CoinGecko
+- Redis caching for performance
+- MongoDB for historical data storage
+- Scheduled data updates
+- RESTful API with validation
+- Rate limiting and security headers
+
+## Prerequisites
+- Node.js 18+
+- Docker and Docker Compose
+- Alpha Vantage API key (free at https://www.alphavantage.co/support/#api-key)
+- Optional: CoinGecko API key for higher rate limits
+
+## Quick Start
+
+### Using Docker (Recommended)
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd market-data-service
+```
+
+2. Create `.env` file
+```bash
+cp .env.example .env
+# Edit .env and add your API keys
+```
+
+3. Build and run with Docker
+```bash
+make build
+make run
+# or without make:
+# docker-compose build
+# docker-compose up -d
+```
+
+4. Check if service is running
+```bash
+curl http://localhost:3002/health
+```
+
+### Local Development
+1. Install dependencies
+```bash
+npm install
+```
+
+2. Start MongoDB and Redis
+```bash
+# Using Docker
+docker run -d -p 27017:27017 --name mongo mongo:6
+docker run -d -p 6379:6379 --name redis redis:7-alpine
+
+# Or install locally
+```
+
+3. Start the service
+```bash
+npm run dev
+```
+
+## API Endpoints
+
+### Stocks
+- `GET /api/v1/markets/stocks?symbols=AAPL,GOOGL,MSFT` - Get multiple stock quotes
+- `GET /api/v1/markets/stocks/AAPL` - Get single stock details
+- `GET /api/v1/markets/stocks/AAPL/history?period=1M` - Get historical data
+
+### Cryptocurrencies
+- `GET /api/v1/markets/crypto` - Get top cryptocurrencies by market cap
+- `GET /api/v1/markets/crypto?symbols=BTC,ETH,BNB` - Get specific cryptos
+- `GET /api/v1/markets/crypto/BTC` - Get single crypto details
+
+### Example Responses
+
+#### Stock Quote
+```json
+{
+  "symbol": "AAPL",
+  "price": 178.50,
+  "change": 2.35,
+  "changePercent": "1.33%",
+  "volume": 52896547,
+  "timestamp": "2024-01-15T16:00:00.000Z",
+  "open": 176.25,
+  "high": 179.10,
+  "low": 175.80,
+  "previousClose": 176.15
+}
+```
+
+#### Crypto Data
+```json
+{
+  "symbol": "BTC",
+  "name": "Bitcoin",
+  "priceUSD": 42350.75,
+  "priceBTC": 1,
+  "marketCap": 829874563219,
+  "volume24h": 23654789652,
+  "circulatingSupply": 19598743,
+  "percentChange1h": 0.45,
+  "percentChange24h": 2.15,
+  "percentChange7d": -1.23
+}
+```
+
+## Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `NODE_ENV` | Environment (development/production) | No | development |
+| `PORT` | Service port | No | 3002 |
+| `MONGO_URL` | MongoDB connection string | Yes | - |
+| `REDIS_URL` | Redis connection string | Yes | - |
+| `ALPHA_VANTAGE_API_KEY` | Alpha Vantage API key | Yes | - |
+| `LOG_LEVEL` | Logging level | No | info |
+
+## Testing
+
+### Unit Tests
+```bash
+npm test
+```
+
+### Integration Tests
+```bash
+npm run test:integration
+```
+
+### Load Testing with Artillery
+```bash
+npm install -g artillery
+artillery run tests/load-test.yml
+```
+
+## Monitoring
+
+### Health Check
+```bash
+curl http://localhost:3002/health
+```
+
+### Metrics
+The service exposes Prometheus metrics at `/metrics` endpoint.
+
+### Logs
+```bash
+# Docker logs
+docker-compose logs -f market-data-service
+
+# Local logs
+tail -f combined.log
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Rate Limit Errors**
+   - Alpha Vantage free tier: 5 API calls/minute
+   - Solution: Implement caching or upgrade API plan
+
+2. **MongoDB Connection Failed**
+   - Check if MongoDB is running: `docker ps`
+   - Verify connection string in .env
+
+3. **Redis Connection Failed**
+   - Check Redis status: `redis-cli ping`
+   - Verify Redis URL in .env
+
+### Debug Mode
+```bash
+# Enable debug logging
+LOG_LEVEL=debug npm run dev
+```
+
+## Production Deployment
+
+### Using Kubernetes
+```bash
+# Build and push image
+docker build -t your-registry/market-data-service:latest .
+docker push your-registry/market-data-service:latest
+
+# Deploy to Kubernetes
+kubectl apply -f k8s/deployment.yaml
+```
+
+### Environment-specific configs
+- Development: `.env.development`
+- Staging: `.env.staging`
+- Production: `.env.production`
+
+## Performance Optimization
+
+1. **Caching Strategy**
+   - Stock data: 5 minutes TTL
+   - Crypto data: 1 minute TTL
+   - Historical data: 1 hour TTL
+
+2. **Database Indexes**
+   - Compound index on (symbol, timestamp)
+   - TTL index for automatic data cleanup
+
+3. **Connection Pooling**
+   - MongoDB: 10 connections
+   - Redis: Automatic pooling
+
+## Security
+
+- Helmet.js for security headers
+- Rate limiting per IP
+- Input validation with Joi
+- API key rotation support
+- No sensitive data in logs
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## License
+
+This project is part of the Investment Comparison Platform.
